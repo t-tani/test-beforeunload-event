@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>beforeunload event test</title>
+    <style>
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f0f0f0;
+        }
+        #cookies {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <h1>beforeunload event test</h1>
+    <button id="redirectButton">Redirect button</button>
+    <!-- <button id="setKeycloakSessionButton">Set KEYCLOAK_SESSION</button>
+    <button id="setKeycloakSessionButtonAndRedirect">Set KEYCLOAK_SESSION and redirect(mock authentication)</button> -->
+    <button id="refreshButton">Refresh localStorage and cookie</button>
+    <h2>Initial cookies</h2>
+    <div id="cookies"></div>
+    <h2>localStorage values (for debug)</h2>
+    <div id="result"></div>
+
+    <script type="module">
+        // setup KC_RESTART cookie and start checkCookiesAndSetTimer timer
+        import { checkCookiesAndSetTimer,setCookie,deleteAllCookies } from "./test.js";
+        setCookie("KC_RESTART","mock-value",1);
+        checkCookiesAndSetTimer(
+            "https://example.com"
+        );
+        function displayResult(message,element) {
+            element.innerHTML += message + '<br>';
+        }
+
+        const resultElement = document.getElementById('result');
+        const cookiesElement = document.getElementById('cookies');
+
+        // show localStorage items
+        for (const key in localStorage) {
+            if (key.startsWith("setTime_")) {
+                displayResult(`${key}: ${localStorage.getItem(key)}`,resultElement);
+            }
+            
+        }
+        // show cookies
+        const cookies = document.cookie.split(';');
+        let cookieData = [];
+
+        cookies.forEach(cookie => {
+            const [name, value] = cookie.trim().split('=');
+            displayResult(`${name}: ${value}`,cookiesElement);
+        });
+
+        // redirect button
+        document.getElementById('redirectButton').addEventListener('click', function() {
+            const startTime = Date.now();
+            localStorage.setItem('setTime_clickRedirectButton', startTime);
+            window.location.href = window.location.href; // redirect to the same page
+        });
+
+        /**
+        // Set KEYCLOAK_SESSION
+        document.getElementById('setKeycloakSessionButton').addEventListener('click', function() {
+            setCookie("KEYCLOAK_SESSION","mock-value",1);
+        });
+
+        // Set KEYCLOAK_SESSION and redirect(mock authentication)
+        document.getElementById('setKeycloakSessionButtonAndRedirect').addEventListener('click', function() {
+            setCookie("KEYCLOAK_SESSION","mock-value",1);
+            
+            timeout = setTimeout(
+            () => 
+                {
+                    window.location.href = window.location.href;
+                },500,
+            );
+        });
+        **/
+
+        // refresh localstorage and cookies
+        document.getElementById('refreshButton').addEventListener('click', function() {
+            localStorage.clear();
+            deleteAllCookies();
+            location.reload();
+        });
+
+    </script>
+    
+</body>
+</html>
